@@ -1,10 +1,8 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import yfinance as yf
-import datetime
 from prophet import Prophet
 import ta
 import sys
@@ -15,12 +13,10 @@ st.title("📈 AI Forecast App By Zachary2562")
 
 # Sidebar settings
 ticker_list = open("tickers.txt").read().splitlines()
-selected_ticker = st.sidebar.selectbox("Select a Ticker", ticker_list)
-custom_ticker = st.sidebar.text_input("Or enter a custom ticker")
+selected_ticker = st.sidebar.selectbox("Select an option", ticker_list)
+custom_ticker = st.sidebar.text_input("🔎 Search Yahoo Finance (e.g., AAPL, BTC-USD)")
 ticker = custom_ticker.upper() if custom_ticker else selected_ticker
 
-start_date = st.sidebar.date_input("Start Date", datetime.date(2010, 1, 1))
-end_date = st.sidebar.date_input("End Date", datetime.date.today())
 high_accuracy = st.sidebar.toggle("Enable High Accuracy Forecast")
 
 enable_lstm = False
@@ -34,15 +30,15 @@ except:
 
 # Load data
 @st.cache_data
-def load_data(ticker, start, end):
+def load_data(ticker):
     try:
-        df = yf.download(ticker, start=start, end=end)
+        df = yf.download(ticker, start="2010-01-01", end=pd.Timestamp.today().strftime('%Y-%m-%d'))
         df.dropna(inplace=True)
         return df
     except:
         return pd.read_csv("sample_data.csv")
 
-df = load_data(ticker, start_date, end_date)
+df = load_data(ticker)
 
 # Show data
 st.subheader(f"Price History for {ticker}")
@@ -134,6 +130,3 @@ if enable_lstm:
     valid = data[training_data_len:]
     valid["Predictions"] = predictions
     st.line_chart(valid[["Close", "Predictions"]])
-else:
-    st.info("⚠ LSTM not supported on Python 3.13+. Prophet forecast only.")
-
