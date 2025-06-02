@@ -15,10 +15,14 @@ st.title("📈 AI Forecast App By Zachary2562")
 
 # Sidebar settings
 ticker_list = open("tickers.txt").read().splitlines()
-ticker = st.sidebar.selectbox("Select a Ticker", ticker_list)
+selected_ticker = st.sidebar.selectbox("Select a Ticker", ticker_list)
+custom_ticker = st.sidebar.text_input("Or enter a custom ticker")
+ticker = custom_ticker.upper() if custom_ticker else selected_ticker
+
 start_date = st.sidebar.date_input("Start Date", datetime.date(2010, 1, 1))
 end_date = st.sidebar.date_input("End Date", datetime.date.today())
 high_accuracy = st.sidebar.toggle("Enable High Accuracy Forecast")
+
 enable_lstm = False
 try:
     import tensorflow as tf
@@ -63,16 +67,13 @@ df.loc[df_clean.index, "EMA12"] = ema12
 
 ema26 = ta.trend.EMAIndicator(close=close_series, window=26).ema_indicator()
 df.loc[df_clean.index, "EMA26"] = ema26
-df.loc[df_clean.index, "EMA26"] = ema26
-bb = ta.volatility.BollingerBands(close=df_clean["Close"])
-close_series = df_clean["Close"]
-if isinstance(close_series, pd.DataFrame):
-    close_series = close_series.iloc[:, 0]
+
 bb = ta.volatility.BollingerBands(close=close_series)
 boll_high = bb.bollinger_hband()
 df.loc[df_clean.index, "Bollinger High"] = boll_high
 boll_low = bb.bollinger_lband()
 df.loc[df_clean.index, "Bollinger Low"] = boll_low
+
 # Prophet Forecast
 st.subheader("📅 Prophet Forecast")
 df_prophet = df.reset_index()[["Date", "Close"]]
@@ -135,36 +136,4 @@ if enable_lstm:
     st.line_chart(valid[["Close", "Predictions"]])
 else:
     st.info("⚠ LSTM not supported on Python 3.13+. Prophet forecast only.")
-# Sidebar UI
-st.sidebar.title("📊 Forecast Settings")
 
-# Dropdown selection
-tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA"]  # Replace or load from file as needed
-selected_ticker = st.sidebar.selectbox("Select a Ticker", tickers)
-
-# Manual input (custom ticker)
-custom_ticker = st.sidebar.text_input("Or enter a custom ticker", "")
-
-# Final ticker logic
-ticker_to_use = custom_ticker.upper() if custom_ticker else selected_ticker
-
-# Date pickers
-start_date = st.sidebar.date_input("Start Date", pd.to_datetime("2010-01-01"))
-end_date = st.sidebar.date_input("End Date", pd.to_datetime("today"))
-
-# Forecast toggle
-use_high_accuracy = st.sidebar.toggle("Enable High Accuracy Forecast")
-
-# Show what’s selected
-st.sidebar.markdown(f"📈 **Running forecast for: `{ticker_to_use}`**")
-
-# Download data
-try:
-    df = yf.download(ticker_to_use, start=start_date, end=end_date)
-
-    if df.empty:
-        st.error("❌ No data found for this ticker. Please try another.")
-        st.stop()
-except Exception as e:
-    st.error(f"⚠️ Error downloading data for {ticker_to_use}: {e}")
-    st.stop()
