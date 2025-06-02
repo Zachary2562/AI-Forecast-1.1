@@ -11,7 +11,7 @@ import sys
 
 # App config
 st.set_page_config(page_title="AI Forecast App", layout="wide")
-st.title("📈 AI Forecast App (Prophet + Optional LSTM)")
+st.title("📈 AI Forecast App By Zachary2562")
 
 # Sidebar settings
 ticker_list = open("tickers.txt").read().splitlines()
