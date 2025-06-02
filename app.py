@@ -135,32 +135,36 @@ if enable_lstm:
     st.line_chart(valid[["Close", "Predictions"]])
 else:
     st.info("⚠ LSTM not supported on Python 3.13+. Prophet forecast only.")
-st.subheader("🔍 Choose or Enter a Stock/ETF/Mutual Fund Ticker")
+# Sidebar UI
+st.sidebar.title("📊 Forecast Settings")
 
-# Dropdown options (your predefined list)
-tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA"]  # or however you load them
-selected_ticker = st.selectbox("Choose a ticker:", tickers)
+# Dropdown selection
+tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA"]  # Replace or load from file as needed
+selected_ticker = st.sidebar.selectbox("Select a Ticker", tickers)
 
-# Manual input
-custom_ticker = st.text_input("Or enter a custom ticker (e.g., AMZN):")
+# Manual input (custom ticker)
+custom_ticker = st.sidebar.text_input("Or enter a custom ticker", "")
 
-# Final ticker to use
-if custom_ticker:
-    ticker_to_use = custom_ticker.upper()
-else:
-    ticker_to_use = selected_ticker
+# Final ticker logic
+ticker_to_use = custom_ticker.upper() if custom_ticker else selected_ticker
 
-st.write(f"📈 Running forecast for: **{ticker_to_use}**")
+# Date pickers
+start_date = st.sidebar.date_input("Start Date", pd.to_datetime("2010-01-01"))
+end_date = st.sidebar.date_input("End Date", pd.to_datetime("today"))
 
-# Download data from Yahoo Finance
+# Forecast toggle
+use_high_accuracy = st.sidebar.toggle("Enable High Accuracy Forecast")
+
+# Show what’s selected
+st.sidebar.markdown(f"📈 **Running forecast for: `{ticker_to_use}`**")
+
+# Download data
 try:
-    df = yf.download(ticker_to_use, start="2010-01-01", end=pd.Timestamp.today().strftime('%Y-%m-%d'))
+    df = yf.download(ticker_to_use, start=start_date, end=end_date)
 
     if df.empty:
         st.error("❌ No data found for this ticker. Please try another.")
         st.stop()
-
-    # Rest of your forecasting code here using `df`
 except Exception as e:
-    st.error(f"⚠️ Error downloading data: {e}")
+    st.error(f"⚠️ Error downloading data for {ticker_to_use}: {e}")
     st.stop()
