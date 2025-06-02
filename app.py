@@ -70,6 +70,24 @@ df.loc[df_clean.index, "Bollinger High"] = boll_high
 boll_low = bb.bollinger_lband()
 df.loc[df_clean.index, "Bollinger Low"] = boll_low
 
+
+# Additional technical indicators
+if set(["High", "Low", "Close", "Volume"]).issubset(df.columns):
+
+    # VWAP
+    df['VWAP'] = (df['Volume'] * (df['High'] + df['Low']) / 2).cumsum() / df['Volume'].cumsum()
+
+    # ADX
+    adx = ta.trend.ADXIndicator(high=df["High"], low=df["Low"], close=df["Close"])
+    df["ADX"] = adx.adx()
+
+    # OBV
+    obv = ta.volume.OnBalanceVolumeIndicator(close=df["Close"], volume=df["Volume"])
+    df["OBV"] = obv.on_balance_volume()
+
+    st.subheader("📊 Additional Indicators")
+    st.line_chart(df[["VWAP", "ADX", "OBV"]])
+
 # Prophet Forecast
 st.subheader("📅 Prophet Forecast")
 df_prophet = df.reset_index()[["Date", "Close"]]
