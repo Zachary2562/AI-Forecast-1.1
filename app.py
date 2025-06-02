@@ -135,3 +135,32 @@ if enable_lstm:
     st.line_chart(valid[["Close", "Predictions"]])
 else:
     st.info("⚠ LSTM not supported on Python 3.13+. Prophet forecast only.")
+st.subheader("🔍 Choose or Enter a Stock/ETF/Mutual Fund Ticker")
+
+# Dropdown options (your predefined list)
+tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA"]  # or however you load them
+selected_ticker = st.selectbox("Choose a ticker:", tickers)
+
+# Manual input
+custom_ticker = st.text_input("Or enter a custom ticker (e.g., AMZN):")
+
+# Final ticker to use
+if custom_ticker:
+    ticker_to_use = custom_ticker.upper()
+else:
+    ticker_to_use = selected_ticker
+
+st.write(f"📈 Running forecast for: **{ticker_to_use}**")
+
+# Download data from Yahoo Finance
+try:
+    df = yf.download(ticker_to_use, start="2010-01-01", end=pd.Timestamp.today().strftime('%Y-%m-%d'))
+
+    if df.empty:
+        st.error("❌ No data found for this ticker. Please try another.")
+        st.stop()
+
+    # Rest of your forecasting code here using `df`
+except Exception as e:
+    st.error(f"⚠️ Error downloading data: {e}")
+    st.stop()
